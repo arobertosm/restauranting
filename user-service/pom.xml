@@ -9,9 +9,9 @@
 		<relativePath>../pom.xml</relativePath> <!-- lookup parent from repository -->
 	</parent>
 
-	<artifactId>restaurant-service</artifactId>
-	<name>restaurant-service</name>
-	<description>Microservice for managing restaurants.</description>
+	<artifactId>user-service</artifactId>
+	<name>user-service</name>
+	<description>Microservice dedicated to users.</description>
 
 	<dependencies>
 		<dependency>
