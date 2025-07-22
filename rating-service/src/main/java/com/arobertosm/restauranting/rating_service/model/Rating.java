@@ -1,4 +1,4 @@
-package com.arobertosm.restauranting.restaurant_service.model;
+package com.arobertosm.restauranting.rating_service.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,9 +15,8 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "restaurant_id", nullable = false)
-    private Restaurant restaurant;
+    @Column(nullable = false)
+    private Long restaurantId;
 
     @Column(nullable = false)
     private Long userId;

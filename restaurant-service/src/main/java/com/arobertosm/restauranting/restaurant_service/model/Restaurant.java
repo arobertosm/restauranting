@@ -1,9 +1,9 @@
 package com.arobertosm.restauranting.restaurant_service.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +16,21 @@ public class Restaurant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private String name;
+
     private String description;
+
+    @NotNull
     private String address;
+
     private String cuisineType;
+
+    @NotNull
     private String phoneNumber;
+
+    @NotNull
+    private int maxCustomers;
 
     @ElementCollection
     @CollectionTable(name = "restaurant_image_urls", joinColumns = @JoinColumn(name = "restaurant_id"))
@@ -36,19 +46,13 @@ public class Restaurant {
 
     private Long ownerId;
 
-    @OneToMany(mappedBy = "restaurant", 
-            cascade = CascadeType.ALL, 
-            orphanRemoval = true
-    )
-    private List<Rating> ratings = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "restaurant_ratings", joinColumns = @JoinColumn(name = "restaurant_id"))
+    private List<Long> ratingsId = new ArrayList<>();
 
     private Double averageRating;
 
-    public void recalculateAverageRating(){
-        if (ratings == null || ratings.isEmpty()){
-            this.averageRating = 0.0;
-        } else {
-            this.averageRating = ratings.stream().mapToInt(Rating::getRatingValue).average().orElse(0.0);
-        }
-    }
+    @ElementCollection
+    @CollectionTable(name = "restaurant_bookings", joinColumns = @JoinColumn(name = "restaurant_id"))
+    private List<Long> bookingsId = new ArrayList<>();
 }

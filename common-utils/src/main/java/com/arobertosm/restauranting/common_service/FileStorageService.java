@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 @Service
-public class FileStorageService {
+public class FileStorageService implements IFileStorageService {
     private final Path rootLocation;
 
     public FileStorageService(@Value("${file.upload-dir}") String uploadDir) {

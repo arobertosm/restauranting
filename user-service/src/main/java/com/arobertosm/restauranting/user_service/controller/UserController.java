@@ -1,49 +1,57 @@
 package com.arobertosm.restauranting.user_service.controller;
 
-import com.arobertosm.restauranting.user_service.model.User;
-import com.arobertosm.restauranting.user_service.repository.UserRepository;
-import com.arobertosm.restauranting.common_service.FileStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.arobertosm.restauranting.user_service.dto.CreateUserRequestDto;
+import com.arobertosm.restauranting.user_service.dto.UserResponseDto;
+import com.arobertosm.restauranting.user_service.service.UserService;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.core.MediaType;
+import com.arobertosm.restauranting.common_service.IFileStorageService;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
+    private IFileStorageService fileStorageService;
 
-    @Autowired
-    private FileStorageService fileStorageService;
+    public UserController(UserService userService, IFileStorageService fileStorageService) {
+        this.userService = userService;
+        this.fileStorageService = fileStorageService;
+    }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("No se ha encontrado al usuario con id: " + id));
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+        return userService.getUserById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User savedUser = userRepository.save(user);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA})
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestPart("userData") CreateUserRequestDto userRequestDto, @RequestPart("profilePicture") MultipartFile profilePictureFile) {
+        String imageUrl = fileStorageService.store(profilePictureFile, "profile-pictures", "user-" + UUID.randomUUID().toString());
+        UserResponseDto savedUserDto = userService.createUser(userRequestDto, imageUrl);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUserDto);
     }
 
-    @PostMapping("/{id}/profile-picture")
-    public ResponseEntity<?> uploadProfilePicture(@PathVariable Long id, @RequestParam("file") MultipartFile file){
-        try{
-            User userFound = getUserById(id);
-            String relativePath = fileStorageService.store(file, "profile-pictures", String.valueOf(id));
-            String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/uploads/").path(relativePath).toUriString();
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @Valid @RequestPart("userData") CreateUserRequestDto userUpdated, @RequestPart("profilePicture") MultipartFile profilePictureFile) {
+        String imageUrl = fileStorageService.store(profilePictureFile, "profile-pictures", "user-" +  UUID.randomUUID().toString());
+        return userService.updateUser(id, userUpdated, imageUrl)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-            userFound.setProfilePictureUrl(fileDownloadUri);
-            userRepository.save(userFound);
-
-            return ResponseEntity.ok("Foto de perfil actualizada correctamente para el usuario con id " + id);
-        } catch (Exception e) {
-            throw new RuntimeException("No se ha encontrado al usuario con id: " + id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
+        if (userService.getUserById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
     }
 }
