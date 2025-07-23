@@ -38,6 +38,7 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
+        dto.setPassword(user.getPassword());
         dto.setProfilePictureUrl(user.getProfilePictureUrl());
         dto.setIsAdmin(user.getIsAdmin());
         dto.setRestaurantId(user.getRestaurantId());

@@ -19,6 +19,7 @@ public class RestaurantMapper {
         restaurant.setDescription(dto.getDescription());
         restaurant.setAddress(dto.getAddress());
         restaurant.setCuisineType(dto.getCuisineType());
+        restaurant.setMaxCustomers(dto.getMaxCustomers());
         restaurant.setPhoneNumber(dto.getPhoneNumber());
         restaurant.setOwnerId(dto.getOwnerId());
         restaurant.setImageUrls(dto.getImageUrls());
@@ -38,6 +39,7 @@ public class RestaurantMapper {
         dto.setName(restaurant.getName());
         dto.setDescription(restaurant.getDescription());
         dto.setAddress(restaurant.getAddress());
+        dto.setMaxCustomers(restaurant.getMaxCustomers());
         dto.setCuisineType(restaurant.getCuisineType());
         dto.setPhoneNumber(restaurant.getPhoneNumber());
         dto.setImageUrls(restaurant.getImageUrls());

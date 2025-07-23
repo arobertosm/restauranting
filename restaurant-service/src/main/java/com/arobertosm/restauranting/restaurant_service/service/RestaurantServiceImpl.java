@@ -51,13 +51,15 @@ public class RestaurantServiceImpl implements RestaurantService {
     @Override
     public Optional<RestaurantResponseDto> update(Long id, CreateRestaurantRequestDto restaurantRequestUpdate, List<String> imageUrls){
         Optional<Restaurant> existingRestaurantAux = restaurantRepository.findByPhoneNumber(restaurantRequestUpdate.getPhoneNumber());
-        if (existingRestaurantAux.isPresent()) {
+        if (existingRestaurantAux != null && existingRestaurantAux.isPresent() && existingRestaurantAux.get().getId() != id) {
             throw new IllegalArgumentException("A restaurant with the phone number " + restaurantRequestUpdate.getPhoneNumber() + " already exists.");
         }        
         List<String> newUrlList = restaurantRequestUpdate.getImageUrls();
-        for (String imageUrl : restaurantRequestUpdate.getImageUrls()) {
-            if (!imageUrls.contains(imageUrl)){
-                newUrlList.add(imageUrl);
+        if (restaurantRequestUpdate.getImageUrls() != null && !restaurantRequestUpdate.getImageUrls().isEmpty()){
+            for (String imageUrl : restaurantRequestUpdate.getImageUrls()) {
+                if (!imageUrls.contains(imageUrl)){
+                    newUrlList.add(imageUrl);
+                }
             }
         }
         return restaurantRepository.findById(id)
@@ -65,6 +67,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                     existingRestaurant.setName(restaurantRequestUpdate.getName());
                     existingRestaurant.setDescription(restaurantRequestUpdate.getDescription());
                     existingRestaurant.setAddress(restaurantRequestUpdate.getAddress());
+                    existingRestaurant.setMaxCustomers(restaurantRequestUpdate.getMaxCustomers());
                     existingRestaurant.setCuisineType(restaurantRequestUpdate.getCuisineType());
                     existingRestaurant.setPhoneNumber(restaurantRequestUpdate.getPhoneNumber());
                     existingRestaurant.setImageUrls(newUrlList);

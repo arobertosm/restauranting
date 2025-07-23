@@ -58,40 +58,43 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingResponseDto bookRestaurant(CreateBookingRequestDto bookingRequestDto){
         Optional<Booking> existingBookingAux = bookingRepository.getBookingWithRestaurantAndUserIdsAndStartDate(bookingRequestDto.getRestaurantId(), bookingRequestDto.getUserId(), bookingRequestDto.getStartDate());
-        if (existingBookingAux.isPresent()){
+        Double maxHoursUntilNextBooking = 4.0;
+        if (existingBookingAux != null && existingBookingAux.isPresent()){
             throw new IllegalArgumentException("You can't book more than once in the same period of time at the same restaurant.");
         }
         List<Booking> existingBookingsUser = bookingRepository.getRelevantBookingsFromUserId(bookingRequestDto.getUserId(), bookingRequestDto.getStartDate());
-        for (Booking bookingUser : existingBookingsUser) {
-            LocalDateTime startingDate = bookingUser.getStartDate();
-            LocalDateTime finishingDate = null;
-            if (bookingUser.getEndDate() != null){
-                finishingDate = bookingUser.getEndDate();
-            }
+        if(existingBookingsUser != null && !existingBookingsUser.isEmpty()){
+            for (Booking bookingUser : existingBookingsUser) {
+                LocalDateTime startingDate = bookingUser.getStartDate();
+                LocalDateTime finishingDate = null;
+                if (bookingUser.getEndDate() != null){
+                    finishingDate = bookingUser.getEndDate();
+                }
 
-            if (finishingDate == null){
-                long hoursDifference = ChronoUnit.HOURS.between(startingDate, bookingRequestDto.getStartDate());
-                if (hoursDifference < 4.0){
-                    throw new RuntimeException("You can't book before 4 hours from your last booking start date.");
+                if (finishingDate == null){
+                    long hoursDifference = ChronoUnit.HOURS.between(startingDate, bookingRequestDto.getStartDate());
+                    if (hoursDifference < maxHoursUntilNextBooking){
+                        throw new RuntimeException("You can't book before 4 hours from your last booking start date.");
+                    }
+                }
+
+                if (finishingDate != null){
+                    if (bookingRequestDto.getStartDate() == startingDate && bookingRequestDto.getEndDate() == finishingDate){
+                        throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+                    }
+                    if (bookingRequestDto.getStartDate().isBefore(finishingDate) && bookingRequestDto.getEndDate().isAfter(startingDate)){
+                        throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+                    }
                 }
             }
-
-            if (finishingDate != null){
-                if (bookingRequestDto.getStartDate() == startingDate && bookingRequestDto.getEndDate() == finishingDate){
-                    throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
-                }
-                if (bookingRequestDto.getStartDate().isBefore(finishingDate) && bookingRequestDto.getEndDate().isAfter(startingDate)){
-                    throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
-                }
-            }
-
-
         }
-        LocalDateTime finishingDayDate = bookingRequestDto.getStartDate().plusDays(1).toLocalDate().atStartOfDay(null).toLocalDateTime();
+        LocalDateTime finishingDayDate = bookingRequestDto.getStartDate().plusDays(1).toLocalDate().atStartOfDay();
         List<Booking> existingBookingsRestaurant = bookingRepository.getDailyBookingsFromRestaurantId(bookingRequestDto.getRestaurantId(), bookingRequestDto.getStartDate(), finishingDayDate);
         Integer customersBooked = 0;
-        for (Booking bookingRestaurant : existingBookingsRestaurant) {
-            customersBooked = customersBooked += bookingRestaurant.getCustomersNumber();
+        if(existingBookingsRestaurant != null && !existingBookingsRestaurant.isEmpty()){
+            for (Booking bookingRestaurant : existingBookingsRestaurant) {
+                customersBooked = customersBooked += bookingRestaurant.getCustomersNumber();
+            }
         }
         Integer maxCustomers = this.webClient.get()
                                 .uri("/api/restaurants/{id}/max-customers", bookingRequestDto.getRestaurantId())
@@ -110,38 +113,43 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Optional<BookingResponseDto> update(Long id, CreateBookingRequestDto bookingUpdated){
         Optional<Booking> existingBookingAux = bookingRepository.getBookingWithRestaurantAndUserIdsAndStartDate(bookingUpdated.getRestaurantId(), bookingUpdated.getUserId(), bookingUpdated.getStartDate());
-        if (existingBookingAux.isPresent()){
+        Double maxHoursUntilNextBooking = 4.0;
+        if (existingBookingAux != null && existingBookingAux.isPresent()){
             throw new IllegalArgumentException("You can't book more than once in the same period of time at the same restaurant.");
         }
         List<Booking> existingBookingsUser = bookingRepository.getRelevantBookingsFromUserId(bookingUpdated.getUserId(), bookingUpdated.getStartDate());
-        for (Booking bookingUser : existingBookingsUser) {
-            LocalDateTime startingDate = bookingUser.getStartDate();
-            LocalDateTime finishingDate = null;
-            if (bookingUser.getEndDate() != null){
-                finishingDate = bookingUser.getEndDate();
-            }
-
-            if (finishingDate == null){
-                long hoursDifference = ChronoUnit.HOURS.between(startingDate, bookingUpdated.getStartDate());
-                if (hoursDifference < 4.0){
-                    throw new RuntimeException("You can't book before 4 hours from your last booking start date.");
+        if(existingBookingsUser != null && !existingBookingsUser.isEmpty()){
+            for (Booking bookingUser : existingBookingsUser) {
+                LocalDateTime startingDate = bookingUser.getStartDate();
+                LocalDateTime finishingDate = null;
+                if (bookingUser.getEndDate() != null){
+                    finishingDate = bookingUser.getEndDate();
                 }
-            }
 
-            if (finishingDate != null){
-                if (bookingUpdated.getStartDate() == startingDate && bookingUpdated.getEndDate() == finishingDate){
-                    throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+                if (finishingDate == null){
+                    long hoursDifference = ChronoUnit.HOURS.between(startingDate, bookingUpdated.getStartDate());
+                    if (hoursDifference < maxHoursUntilNextBooking){
+                        throw new RuntimeException("You can't book before 4 hours from your last booking start date.");
+                    }
                 }
-                if (bookingUpdated.getStartDate().isBefore(finishingDate) && bookingUpdated.getEndDate().isAfter(startingDate)){
-                    throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+
+                if (finishingDate != null){
+                    if (bookingUpdated.getStartDate() == startingDate && bookingUpdated.getEndDate() == finishingDate){
+                        throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+                    }
+                    if (bookingUpdated.getStartDate().isBefore(finishingDate) && bookingUpdated.getEndDate().isAfter(startingDate)){
+                        throw new RuntimeException("You're trying to book in a date which would overlap another of your bookings.");
+                    }
                 }
             }
         }
-        LocalDateTime finishingDayDate = bookingUpdated.getStartDate().plusDays(1).toLocalDate().atStartOfDay(null).toLocalDateTime();
+        LocalDateTime finishingDayDate = bookingUpdated.getStartDate().plusDays(1).toLocalDate().atStartOfDay();
         List<Booking> existingBookingsRestaurant = bookingRepository.getDailyBookingsFromRestaurantId(bookingUpdated.getRestaurantId(), bookingUpdated.getStartDate(), finishingDayDate);
         Integer customersBooked = 0;
-        for (Booking bookingRestaurant : existingBookingsRestaurant) {
-            customersBooked = customersBooked += bookingRestaurant.getCustomersNumber();
+        if(existingBookingsRestaurant != null && !existingBookingsRestaurant.isEmpty()){
+            for (Booking bookingRestaurant : existingBookingsRestaurant) {
+                customersBooked = customersBooked += bookingRestaurant.getCustomersNumber();
+            }
         }
         Integer maxCustomers = this.webClient.get()
                                 .uri("/api/restaurants/{id}/max-customers", bookingUpdated.getRestaurantId())

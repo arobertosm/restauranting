@@ -53,7 +53,7 @@ public class RatingServiceImpl implements RatingService {
     @Transactional
     public RatingResponseDto rateRestaurant(CreateRatingRequestDto ratingRequestDto) {
         Optional<Rating> existingRatingAux = ratingsRepository.getRatingWithRestaurantIdAndUserId(ratingRequestDto.getRestaurantId(), ratingRequestDto.getUserId());
-        if (existingRatingAux.isPresent()){
+        if (existingRatingAux != null && existingRatingAux.isPresent()){
             throw new IllegalArgumentException("A user can only rate a restaurant once.");
         }
         Rating ratingToSave = ratingsMapper.toEntity(ratingRequestDto);
@@ -64,7 +64,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public Optional<RatingResponseDto> update(Long id, CreateRatingRequestDto ratingUpdated) {
         Optional<Rating> existingRatingAux = ratingsRepository.getRatingWithRestaurantIdAndUserId(ratingUpdated.getRestaurantId(), ratingUpdated.getUserId());
-        if (existingRatingAux.isPresent()){
+        if (existingRatingAux != null && existingRatingAux.isPresent() && existingRatingAux.get().getId() != id){
             throw new IllegalArgumentException("A user can only rate a restaurant once.");
         }
         return ratingsRepository.findById(id)
@@ -73,7 +73,7 @@ public class RatingServiceImpl implements RatingService {
                     existingRating.setUserId(ratingUpdated.getUserId());
                     existingRating.setRatingValue(ratingUpdated.getRatingValue());
                     existingRating.setComment(ratingUpdated.getComment());
-                    existingRating.setCreationDate(LocalDateTime.now());
+                    existingRating.setCreationDate(ratingUpdated.getCreationDate());
                     Rating updatedRating = ratingsRepository.save(existingRating);
                     return ratingsMapper.toResponseDto(updatedRating);
                 });

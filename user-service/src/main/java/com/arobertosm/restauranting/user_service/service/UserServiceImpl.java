@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService{
     @Transactional
     public UserResponseDto createUser(CreateUserRequestDto userRequestDto, String imageUrl){
         Optional<User> existingUserAux = userRepository.findByUsername(userRequestDto.getUsername());
-        if (existingUserAux.isPresent()){
+        if (existingUserAux != null && existingUserAux.isPresent()){
             throw new IllegalArgumentException("The username: " + existingUserAux.get().getUsername() + " already exists.");
         }
         if (userRequestDto.getPassword() != userRequestDto.getPassword2()){
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public Optional<UserResponseDto> updateUser(Long id, CreateUserRequestDto userRequestUpdate, String imageUrl){
         Optional<User> existingUserAux = userRepository.findByUsername(userRequestUpdate.getUsername());
-        if (existingUserAux.isPresent() && !existingUserAux.get().getId().equals(id)){
+        if (existingUserAux != null && existingUserAux.isPresent() && !existingUserAux.get().getId().equals(id)){
             throw new IllegalArgumentException("The username: " + existingUserAux.get().getUsername() + " already exists.");
         }
         if (userRequestUpdate.getPassword() != userRequestUpdate.getPassword2()){

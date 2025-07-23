@@ -1,5 +1,7 @@
 package com.arobertosm.restauranting.rating_service.dto;
 
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -18,4 +20,7 @@ public class CreateRatingRequestDto {
 
     @Size(max = 1000, message = "{error.comment.length}")
     private String comment;
+
+    @NotNull
+    private LocalDateTime creationDate;
 }

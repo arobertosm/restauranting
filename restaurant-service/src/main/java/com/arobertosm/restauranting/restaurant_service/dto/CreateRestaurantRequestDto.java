@@ -20,7 +20,12 @@ public class CreateRestaurantRequestDto {
     @NotBlank(message = "{error.address.blank}")
     private String address;
 
+    @NotNull(message = "{error.max.customers.blank}")
+    private int maxCustomers;
+
     private String cuisineType;
+    
+    @NotNull(message = "{error.phone.blank}")
     private String phoneNumber;
 
     @NotNull(message = "{error.illegal.usage}")

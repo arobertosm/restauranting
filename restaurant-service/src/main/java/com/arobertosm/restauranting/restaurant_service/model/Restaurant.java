@@ -44,6 +44,7 @@ public class Restaurant {
     @CollectionTable(name = "restaurant_estimated_prices", joinColumns = @JoinColumn(name = "restaurant_id"))
     private List<Double> estimatedPrices;
 
+    @NotNull
     private Long ownerId;
 
     @ElementCollection

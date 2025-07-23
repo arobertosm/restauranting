@@ -11,6 +11,7 @@ public class RestaurantResponseDto {
     private String address;
     private String cuisineType;
     private String phoneNumber;
+    private int maxCustomers;
     private List<String> imageUrls;
     private List<String> customersEating;
     private List<Double> estimatedPrices;
